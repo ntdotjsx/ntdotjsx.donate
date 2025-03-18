@@ -1,0 +1,49 @@
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model users {
+  id        Int        @id @default(autoincrement())
+  username  String     @unique
+  email     String     @unique
+  telephone String     @unique
+  role      ROLE       @default(USER)
+  status    APPROVED   @default(YES)
+  firstname String
+  lastname  String
+  image     String?
+  password  String
+  createdAt DateTime   @default(now())
+  donations donation[]
+}
+
+model donation {
+  id             Int            @id @default(autoincrement())
+  userId         Int
+  guest_name     String
+  amount         Int
+  message        String
+  payment_method PAYMENT_METHOD @default(PROMPTPAY)
+  created_at     DateTime       @default(now())
+  user           users          @relation(fields: [userId], references: [id])
+}
+
+enum ROLE {
+  USER
+  ADMIN
+}
+
+enum APPROVED {
+  YES
+  NO
+}
+
+enum PAYMENT_METHOD {
+  PROMPTPAY
+  TRUE_WALLET
+}
