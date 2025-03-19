@@ -184,7 +184,7 @@ router.put('/:id/password', async (req, res) => {
 
         // อัปเดตรหัสผ่านในฐานข้อมูล
         const user = await prisma.users.update({
-            where: { id: Number(id) }, // แปลง id เป็นตัวเลข (ถ้าเป็น int)
+            where: { id: Number(id) },
             data: { password: hashedPassword }
         });
 

@@ -149,8 +149,8 @@ router.post('/donations', async (req, res) => {
             {
                 headers: {
                     'Content-Type': 'application/json',
-                    Authorization: API_SECRET,
-                    'X-User-ID': API_KEY,
+                    Authorization: process.env.API_SECRET,
+                    'X-User-ID': process.env.API_KEY,
                 },
                 responseType: 'arraybuffer',
             }
@@ -204,8 +204,8 @@ router.post('/test', async (req, res) => {
             {
                 headers: {
                     'Content-Type': 'application/json',
-                    Authorization: API_SECRET,
-                    'X-User-ID': API_KEY,
+                    Authorization: process.env.API_SECRET,
+                    'X-User-ID': process.env.API_KEY,
                 },
                 responseType: 'arraybuffer',
             }
