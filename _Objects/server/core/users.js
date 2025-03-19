@@ -1,9 +1,10 @@
 const express = require('express');
 const { PrismaClient } = require('@prisma/client');
-const multer = require('multer'); 
+const multer = require('multer');
 const path = require('path');
 const router = express.Router();
 const prisma = new PrismaClient();
+const bcrypt = require('bcrypt');
 
 // config
 const storage = multer.diskStorage({
@@ -87,7 +88,7 @@ router.put('/:id/3', async (req, res) => {
         const user = await prisma.users.findUnique({
             where: { id: userId },
         });
-        
+
         if (!user) {
             return res.status(404).json({ error: 'ไม่พบผู้ใช้' });
         }
@@ -111,34 +112,34 @@ router.put('/:id/3', async (req, res) => {
 
 router.delete('/:id', async (req, res) => {
     const { id } = req.params;
-    
-    try {
-      const userId = parseInt(id, 10);
 
-      const user = await prisma.users.findUnique({
-        where: { id: userId },
-      });
-      
-      if (!user) {
-        return res.status(404).json({ error: 'ไม่พบผู้ใช้' });
-      }
-      
-      await prisma.donation.deleteMany({
-        where: { userId },
-      });
-      
-      // delete user
-      const deletedUser = await prisma.users.delete({
-        where: { id: userId },
-      });
-      
-      res.json({ message: 'ลบผู้ใช้สำเร็จ', deletedUser });
+    try {
+        const userId = parseInt(id, 10);
+
+        const user = await prisma.users.findUnique({
+            where: { id: userId },
+        });
+
+        if (!user) {
+            return res.status(404).json({ error: 'ไม่พบผู้ใช้' });
+        }
+
+        await prisma.donation.deleteMany({
+            where: { userId },
+        });
+
+        // delete user
+        const deletedUser = await prisma.users.delete({
+            where: { id: userId },
+        });
+
+        res.json({ message: 'ลบผู้ใช้สำเร็จ', deletedUser });
     } catch (error) {
-      console.error(error);
-      res.status(500).json({ error: 'Internal Server Error' });
+        console.error(error);
+        res.status(500).json({ error: 'Internal Server Error' });
     }
-  });
-  
+});
+
 router.put('/:id/2', async (req, res) => {
     const { id } = req.params;
     const { email, telephone, firstname, lastname } = req.body;
@@ -159,13 +160,41 @@ router.put('/:id/2', async (req, res) => {
 
         const updatedUser = await prisma.users.update({
             where: { id: userId },
-            data: { email, telephone, firstname, lastname},
+            data: { email, telephone, firstname, lastname },
         });
 
         res.json(updatedUser);
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+router.put('/:id/password', async (req, res) => {
+    const { id } = req.params;
+    const { newPassword } = req.body;
+
+    if (!newPassword) {
+        return res.status(400).json({ error: 'Password is required' });
+    }
+
+    try {
+        // แฮชรหัสผ่านใหม่
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        // อัปเดตรหัสผ่านในฐานข้อมูล
+        const user = await prisma.users.update({
+            where: { id: Number(id) }, // แปลง id เป็นตัวเลข (ถ้าเป็น int)
+            data: { password: hashedPassword }
+        });
+
+        res.json({ message: 'Password updated successfully', user });
+    } catch (error) {
+        if (error.code === 'P2025') {
+            return res.status(404).json({ error: 'User not found' });
+        }
+        console.error(error);
+        res.status(500).json({ error: 'Internal server error' });
     }
 });
 

@@ -38,6 +38,39 @@ export default function Account() {
         }
     };
 
+    const [currentPassword, setCurrentPassword] = useState("");
+    const [newPassword, setNewPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
+    const [isChangingPassword, setIsChangingPassword] = useState(false);
+
+    const handleChangePassword = async (e) => {
+        e.preventDefault();
+
+        if (newPassword !== confirmPassword) {
+            showToast("error", "รหัสผ่านใหม่ไม่ตรงกัน");
+            return;
+        }
+
+        setIsChangingPassword(true);
+
+        try {
+            const response = await axios.put(`http://localhost:3000/users/${user.id}/password`, {
+                currentPassword,
+                newPassword,
+            });
+
+            showToast("success", response.data.message || "เปลี่ยนรหัสผ่านสำเร็จ");
+            setCurrentPassword("");
+            setNewPassword("");
+            setConfirmPassword("");
+        } catch (error) {
+            const errorMessage = error.response ? error.response.data.error : error.message;
+            showToast("error", errorMessage);
+        } finally {
+            setIsChangingPassword(false);
+        }
+    };
+
     const inputRef2 = useRef(null);
     const handleCopy2 = () => {
         if (inputRef2.current) {
@@ -299,6 +332,51 @@ export default function Account() {
             >
                 {isSending ? "กำลังส่ง..." : <i className="fa-solid fa-play"></i>}
             </button>
+            <div className="mt-5">
+                <h2 className="text-lg font-semibold mb-4">เปลี่ยนรหัสผ่าน</h2>
+                <form onSubmit={handleChangePassword} className="space-y-4">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700">รหัสผ่านปัจจุบัน</label>
+                        <input
+                            type="password"
+                            value={currentPassword}
+                            onChange={(e) => setCurrentPassword(e.target.value)}
+                            className="mt-1 block w-full border rounded-lg p-2"
+                            required
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700">รหัสผ่านใหม่</label>
+                        <input
+                            type="password"
+                            value={newPassword}
+                            onChange={(e) => setNewPassword(e.target.value)}
+                            className="mt-1 block w-full border rounded-lg p-2"
+                            required
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700">ยืนยันรหัสผ่านใหม่</label>
+                        <input
+                            type="password"
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            className="mt-1 block w-full border rounded-lg p-2"
+                            required
+                        />
+                    </div>
+
+                    <button
+                        type="submit"
+                        disabled={isChangingPassword}
+                        className={`w-full p-3 rounded-lg text-white transition ${isChangingPassword ? "bg-gray-400 cursor-not-allowed" : "bg-blue-500 hover:bg-blue-600"}`}
+                    >
+                        {isChangingPassword ? "กำลังเปลี่ยน..." : "เปลี่ยนรหัสผ่าน"}
+                    </button>
+                </form>
+            </div>
         </>
     );
 }
